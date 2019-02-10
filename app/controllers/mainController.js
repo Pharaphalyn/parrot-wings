@@ -21,8 +21,33 @@ exports.index = function (req, res) {
 
 exports.new = function (req, res) {
     var user = new User();
+    
     user.name = req.body.name;
-    user.email = req.body.email;
+    if (req.body.name) {
+        user.name = req.body.name;
+    } else {
+        return res.json({
+            error: 'Name is required.'
+        })
+    }
+    if (!validateName(user.name)) {
+        return res.json({
+            error: 'Please, provide a valid name (only letters and space).'
+        })
+    }
+    if (req.body.email) {
+        user.email = req.body.email;
+    } else {
+        return res.json({
+            error: 'Email is required.'
+        })
+    }
+    if (!validateEmail(user.email)) {
+        return res.json({
+            error: 'Please, provide a valid email.'
+        })
+    }
+
     if (req.body.password) {
         user.password = bcrypt.hashSync(req.body.password, config.saltRounds);
     } else {
@@ -90,3 +115,14 @@ res.json({
         });
     });
 };
+
+function validateEmail(email) {
+    let re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
+}
+
+function validateName(name)
+{
+    var re = /^[a-zA-Z ]{2,30}$/;
+    return re.test(name);
+}
