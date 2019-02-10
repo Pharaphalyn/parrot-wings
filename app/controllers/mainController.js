@@ -1,5 +1,8 @@
+const bcrypt = require('bcrypt');
+const config = require('../../config');
+
 User = require('../models/userModel');
-// Handle index actions
+
 exports.index = function (req, res) {
     User.get(function (err, users) {
         if (err) {
@@ -15,21 +18,32 @@ exports.index = function (req, res) {
         });
     });
 };
-// Handle create user actions
+
 exports.new = function (req, res) {
     var user = new User();
-    user.name = req.body.name ? req.body.name : user.name;
-    user.gender = req.body.gender;
+    user.name = req.body.name;
     user.email = req.body.email;
-    user.phone = req.body.phone;
-// save the user and check for errors
+    if (req.body.password) {
+        user.password = bcrypt.hashSync(req.body.password, config.saltRounds);
+    } else {
+        return res.json({
+            error: 'Password is required.'
+        })
+    }
+    user.balance = 500;
     user.save(function (err) {
-        // if (err)
-        //     res.json(err);
-res.json({
-            message: 'New user created!',
-            data: user
-        });
+        if (err) { 
+            if (err.name === 'MongoError' && err.code === 11000) {
+                return res.json({
+                    error: 'User with this email already exists.',
+                });
+            } else if (err.name === 'ValidationError'){
+                return res.json({
+                    error: 'All fields are required.'
+                });
+            }
+        }
+        res.sendStatus(200);
     });
 };
 // Handle view user info
