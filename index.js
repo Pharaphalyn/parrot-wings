@@ -1,6 +1,7 @@
 // FileName: index.js
 // Import express
-let express = require('express')
+let express = require('express');
+const config = require('./config');
 // Initialize the app
 let app = express();
 // Setup server port
@@ -19,7 +20,7 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 // Connect to Mongoose and set connection variable
-mongoose.connect('mongodb://localhost/pw');
+mongoose.connect(config.dbConnection);
 var db = mongoose.connection;
 // Use Api routes in the App
 app.use('/api', apiRoutes)

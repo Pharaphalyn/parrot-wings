@@ -8,16 +8,16 @@ router.get('/', function (req, res) {
         message: 'Welcome to PW crafted with love!',
     });
 });
-// Import contact controller
-var contactController = require('./contactController');
+// Import main controller
+var mainController = require('./app/controllers/mainController');
 // Contact routes
-router.route('/contacts')
-    .get(contactController.index)
-    .post(contactController.new);
-router.route('/contacts/:contact_id')
-    .get(contactController.view)
-    .patch(contactController.update)
-    .put(contactController.update)
-    .delete(contactController.delete);
+router.route('/users')
+    .get(mainController.index)
+    .post(mainController.new);
+router.route('/users/:user_id')
+    .get(mainController.view)
+    .patch(mainController.update)
+    .put(mainController.update)
+    .delete(mainController.delete);
 // Export API routes
 module.exports = router;
