@@ -1,6 +1,7 @@
 // api-routes.js
 // Initialize express router
 let router = require('express').Router();
+const passport = require('passport');
 // Set default API response
 router.get('/', function (req, res) {
     res.json({
@@ -11,13 +12,9 @@ router.get('/', function (req, res) {
 // Import main controller
 var mainController = require('./app/controllers/mainController');
 // Contact routes
-router.route('/users')
-    .get(mainController.index)
+router.route('/register')
     .post(mainController.new);
-router.route('/users/:user_id')
-    .get(mainController.view)
-    .patch(mainController.update)
-    .put(mainController.update)
-    .delete(mainController.delete);
+router.route('/login')
+    .post(passport.authenticate('local'));
 // Export API routes
 module.exports = router;
