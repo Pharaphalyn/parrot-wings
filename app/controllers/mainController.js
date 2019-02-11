@@ -71,50 +71,6 @@ exports.new = function (req, res) {
         res.sendStatus(200);
     });
 };
-// Handle view user info
-exports.view = function (req, res) {
-    User.findById(req.params.user_id, function (err, user) {
-        if (err)
-            res.send(err);
-        res.json({
-            message: 'User details loading..',
-            data: user
-        });
-    });
-};
-// Handle update user info
-exports.update = function (req, res) {
-User.findById(req.params.user_id, function (err, user) {
-        if (err)
-            res.send(err);
-user.name = req.body.name ? req.body.name : user.name;
-        user.gender = req.body.gender;
-        user.email = req.body.email;
-        user.phone = req.body.phone;
-// save the user and check for errors
-        user.save(function (err) {
-            if (err)
-                res.json(err);
-            res.json({
-                message: 'User Info updated',
-                data: user
-            });
-        });
-    });
-};
-// Handle delete user
-exports.delete = function (req, res) {
-    User.remove({
-        _id: req.params.user_id
-    }, function (err, user) {
-        if (err)
-            res.send(err);
-res.json({
-            status: "success",
-            message: 'User deleted'
-        });
-    });
-};
 
 function validateEmail(email) {
     let re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
