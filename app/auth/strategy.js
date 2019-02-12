@@ -3,7 +3,10 @@ const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt');
 User = require('../models/userModel');
 
-let strategy = new LocalStrategy(
+let strategy = new LocalStrategy( {
+    usernameField: 'email',
+    passwordField: 'password'
+  },
   function(email, password, done) {
     User.findOne({ email: email }, function (err, user) {
       if (err) {   
@@ -20,7 +23,6 @@ let strategy = new LocalStrategy(
 );
 
 function isValidPassword(user, password) {
-    console.log(user.password, password)
     return bcrypt.compareSync(password, user.password);
 }
 

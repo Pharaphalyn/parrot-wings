@@ -1,9 +1,16 @@
 let express = require('express');
+const session = require('express-session');
 const passport = require('passport');
 const localStrategy = require('./app/auth/strategy');
 const config = require('./config');
 
 let app = express();
+
+app.use(session({
+   secret: 'i dont know you and i dont care to know you',
+   saveUninitialized: true,
+   resave: true,
+ }));
 
 app.use(passport.initialize());
 app.use(passport.session());
