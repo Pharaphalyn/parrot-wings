@@ -85,8 +85,20 @@ exports.logOut = function (req, res, next) {
     return res.sendStatus(200);
 }
 
-exports.getUser = function (req, res, next) {
+exports.getInfo = function (req, res, next) {
     return res.json({name: req.user.name, balance: req.user.balance});
+}
+
+exports.getUsers = function (req, res, next) {
+    User.find({}, (error, users) => {
+        if (error) {
+            return res.json({error: error});
+        }
+        
+        res.send(users.map(function(user) {  
+            return user.name; 
+        }));
+    })
 }
 
 exports.test = function (req, res, next) {

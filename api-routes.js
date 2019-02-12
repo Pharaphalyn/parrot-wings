@@ -22,7 +22,9 @@ router.route('/login')
 router.route('/logout')
     .post(mainController.requireAuthentication, mainController.logOut);
 router.route('/info')
-    .get(mainController.requireAuthentication, mainController.getUser);
+    .get(mainController.requireAuthentication, mainController.getInfo);
+router.route('/users')
+    .get(mainController.requireAuthentication, mainController.getUsers);
 router.route('/test')
     .get(mainController.requireAuthentication, mainController.test);
 module.exports = router;
