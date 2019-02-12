@@ -75,10 +75,18 @@ exports.new = function (req, res) {
 exports.requireAuthentication = function (req, res, next) {
     if (req.isAuthenticated()) {
         next();
-    } else {
-        console.log(req.isAuthenticated());
+    } else {    
         return res.sendStatus(401);
     }
+}
+
+exports.logOut = function (req, res, next) {
+    req.logout();
+    return res.sendStatus(200);
+}
+
+exports.getUser = function (req, res, next) {
+    return res.json({name: req.user.name, balance: req.user.balance});
 }
 
 exports.test = function (req, res, next) {

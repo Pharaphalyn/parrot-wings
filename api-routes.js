@@ -3,8 +3,7 @@ const passport = require('passport');
 
 router.get('/', function (req, res) {
     res.json({
-        status: 'API Its Working',
-        message: 'Welcome to PW crafted with love!',
+        message: 'Welcome to PW.',
     });
 });
 
@@ -20,6 +19,10 @@ router.route('/login')
             return res.sendStatus(401);
         }
       });
+router.route('/logout')
+    .post(mainController.requireAuthentication, mainController.logOut);
+router.route('/info')
+    .get(mainController.requireAuthentication, mainController.getUser);
 router.route('/test')
     .get(mainController.requireAuthentication, mainController.test);
 module.exports = router;
