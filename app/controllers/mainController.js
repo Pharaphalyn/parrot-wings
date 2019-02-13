@@ -96,9 +96,38 @@ exports.getUsers = function (req, res, next) {
         }
         
         res.send(users.map(function(user) {  
-            return user.name; 
+            let strippedUser = {name: user.name, id: user._id}
+            return strippedUser; 
         }));
     })
+}
+
+exports.pay = function (req, res, next) {
+    const payment = req.body.amount;
+    const payee = req.body.payee;
+
+    if (!payment || !payee) {
+        return res.json({error: 'No payee or payment amount sent to server.'})
+    }
+
+    if (req.user.balance < payment) {
+        return res.json({error: 'Not enough funds.'});
+    }
+
+    User.findOneAndUpdate({_id: payee}, {$inc : {balance: payment}}, function(error, doc){
+        console.log(error);
+        console.log(!!error);
+        if (error) return res.json({ error: error });
+        console.log('end');
+        if (!doc) return res.json({error: "Wrong payee id."});
+        User.findOneAndUpdate({_id: req.user._id}, {$inc : {balance: -1 * payment}}, function(error, doc){
+            if (error) {
+                User.findOneAndUpdate({_id: payee}, {$inc : {balance: -1 * payment}});
+                return res.json({ error: error });
+            }
+            return res.sendStatus(200);
+        });
+    });
 }
 
 exports.test = function (req, res, next) {
