@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const config = require('../../config');
 
 User = require('../models/userModel');
+Transaction = require('../models/transactionModel');
 
 exports.index = function (req, res) {
     User.get(function (err, users) {
@@ -125,6 +126,8 @@ exports.pay = function (req, res, next) {
                 User.findOneAndUpdate({_id: payee}, {$inc : {balance: -1 * payment}});
                 return res.json({ error: error });
             }
+            let transaction = new Transaction({payer: req.user._id, correspondent: payee, amount: payment, balance: doc.balance});
+            transaction.save();
             return res.sendStatus(200);
         });
     });
