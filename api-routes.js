@@ -23,6 +23,8 @@ router.route('/logout')
     .post(mainController.requireAuthentication, mainController.logOut);
 router.route('/info')
     .get(mainController.requireAuthentication, mainController.getInfo);
+router.route('/transactions')
+    .get(mainController.requireAuthentication, mainController.getTransactions);
 router.route('/users')
     .get(mainController.requireAuthentication, mainController.getUsers);
 router.route('/pay')

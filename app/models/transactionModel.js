@@ -17,7 +17,11 @@ let transactionSchema = mongoose.Schema({
         type: Number,
         required: true
     },
-    balance: {
+    payerBalance: {
+        type: Number,
+        required: true
+    },
+    payeeBalance: {
         type: Number,
         required: true
     }

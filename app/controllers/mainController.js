@@ -111,25 +111,56 @@ exports.pay = function (req, res, next) {
         return res.json({error: 'No payee or payment amount sent to server.'})
     }
 
-    if (req.user.balance < payment) {
-        return res.json({error: 'Not enough funds.'});
+    if (req.user._id == payee) {
+        return res.json({error: 'It\'s impossible to pay yourself.'});
     }
 
-    User.findOneAndUpdate({_id: payee}, {$inc : {balance: payment}}, function(error, doc){
-        console.log(error);
-        console.log(!!error);
+    User.findOne({_id: req.user._id}, (error, user) => {
         if (error) return res.json({ error: error });
-        console.log('end');
-        if (!doc) return res.json({error: "Wrong payee id."});
-        User.findOneAndUpdate({_id: req.user._id}, {$inc : {balance: -1 * payment}}, function(error, doc){
-            if (error) {
-                User.findOneAndUpdate({_id: payee}, {$inc : {balance: -1 * payment}});
-                return res.json({ error: error });
-            }
-            let transaction = new Transaction({payer: req.user._id, correspondent: payee, amount: payment, balance: doc.balance});
-            transaction.save();
-            return res.sendStatus(200);
+        if (user.balance < payment) {
+            return res.json({error: 'Not enough funds.'});
+        }
+        User.findOneAndUpdate({_id: payee}, {$inc : {balance: payment}}, function(error, payeeDoc){
+            if (error) return res.json({ error: error });
+            if (!payeeDoc) return res.json({error: "Wrong payee id."});
+            User.findOneAndUpdate({_id: req.user._id}, {$inc : {balance: -1 * payment}}, function(error, doc){
+                if (error) {
+                    User.findOneAndUpdate({_id: payee}, {$inc : {balance: -1 * payment}});
+                    return res.json({ error: error });
+                }
+                if (!doc) {
+                    User.findOneAndUpdate({_id: payee}, {$inc : {balance: -1 * payment}});
+                    return res.json({ error: 'Wrong user.' });
+                }
+                let transaction = new Transaction({payer: req.user._id, correspondent: payee, 
+                                                    amount: payment,payerBalance: doc.balance - payment, 
+                                                    payeeBalance: payeeDoc.balance + payment});
+                transaction.save();
+                return res.sendStatus(200);
+            });
         });
+    })
+}
+
+exports.getTransactions = function (req, res, next) {
+    Transaction.find({$or: [{payer: req.user._id}, {correspondent: req.user._id}]}, (error, transactions) => {
+        if (error) return res.json({ error: error });
+        return res.json(transactions.map(function(transaction) {
+            let balance;
+            let strippedTransaction = {};
+            strippedTransaction.payer = transaction.payer;
+            strippedTransaction.correspondent = transaction.correspondent;
+            strippedTransaction.amount = transaction.amount;
+            strippedTransaction.date = transaction.date;
+
+            if (transaction.correspondent == req.user._id) {
+                balance = transaction.payeeBalance
+            } else {
+                balance = transaction.payerBalance
+            }
+            strippedTransaction.balance = balance;
+            return strippedTransaction; 
+        }));
     });
 }
 
