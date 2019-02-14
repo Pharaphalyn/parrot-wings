@@ -13,6 +13,14 @@ let transactionSchema = mongoose.Schema({
         type: String,
         required: true,
     },
+    payerName: {
+        type: String,
+        required: true,
+    },
+    correspondentName: {
+        type: String,
+        required: true,
+    },
     amount: {
         type: Number,
         required: true

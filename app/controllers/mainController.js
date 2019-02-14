@@ -27,24 +27,24 @@ exports.new = function (req, res) {
     if (req.body.name) {
         user.name = req.body.name;
     } else {
-        return res.json({
+        return res.status(400).json({
             error: 'Name is required.'
         })
     }
     if (!validateName(user.name)) {
-        return res.json({
+        return res.status(400).json({
             error: 'Please, provide a valid name (only letters and space).'
         })
     }
     if (req.body.email) {
         user.email = req.body.email;
     } else {
-        return res.json({
+        return res.status(400).send({
             error: 'Email is required.'
         })
     }
     if (!validateEmail(user.email)) {
-        return res.json({
+        return res.status(400).send({
             error: 'Please, provide a valid email.'
         })
     }
@@ -52,7 +52,7 @@ exports.new = function (req, res) {
     if (req.body.password) {
         user.password = bcrypt.hashSync(req.body.password, config.saltRounds);
     } else {
-        return res.json({
+        return res.status(500).json({
             error: 'Password is required.'
         })
     }
@@ -60,11 +60,11 @@ exports.new = function (req, res) {
     user.save(function (err) {
         if (err) { 
             if (err.name === 'MongoError' && err.code === 11000) {
-                return res.json({
+                return res.status(500).json({
                     error: 'User with this email already exists.',
                 });
             } else if (err.name === 'ValidationError'){
-                return res.json({
+                return res.status(500).json({
                     error: 'All fields are required.'
                 });
             }
@@ -87,17 +87,20 @@ exports.logOut = function (req, res, next) {
 }
 
 exports.getInfo = function (req, res, next) {
-    return res.json({name: req.user.name, balance: req.user.balance});
+    User.findOne({_id: req.user._id}, (error, user) => {
+        if (error) return res.status(500).json({ error: error });  
+        return res.json({name: user.name, balance: user.balance});
+    });
 }
 
 exports.getUsers = function (req, res, next) {
     User.find({}, (error, users) => {
         if (error) {
-            return res.json({error: error});
+            return res.status(400).json({error: error});
         }
         
         res.send(users.map(function(user) {  
-            let strippedUser = {name: user.name, id: user._id}
+            let strippedUser = {name: user.name, id: user._id, email: user.email};
             return strippedUser; 
         }));
     })
@@ -108,31 +111,36 @@ exports.pay = function (req, res, next) {
     const payee = req.body.payee;
 
     if (!payment || !payee) {
-        return res.json({error: 'No payee or payment amount sent to server.'})
+        return res.status(400).json({error: 'No payee or payment amount sent to server.'})
+    }
+
+    if (isNaN(payment)) {
+        return res.status(400).json({error: 'Invalid payment amount.'});
     }
 
     if (req.user._id == payee) {
-        return res.json({error: 'It\'s impossible to pay yourself.'});
+        return res.status(400).json({error: 'It\'s impossible to pay yourself.'});
     }
 
     User.findOne({_id: req.user._id}, (error, user) => {
-        if (error) return res.json({ error: error });
+        if (error) return res.status(500).json({ error: error });
         if (user.balance < payment) {
-            return res.json({error: 'Not enough funds.'});
+            return res.status(400).json({error: 'Not enough funds.'});
         }
         User.findOneAndUpdate({_id: payee}, {$inc : {balance: payment}}, function(error, payeeDoc){
-            if (error) return res.json({ error: error });
-            if (!payeeDoc) return res.json({error: "Wrong payee id."});
+            if (error) return res.status(400).json({ error: error });
+            if (!payeeDoc) return res.status(400).json({error: "Wrong payee id."});
             User.findOneAndUpdate({_id: req.user._id}, {$inc : {balance: -1 * payment}}, function(error, doc){
                 if (error) {
                     User.findOneAndUpdate({_id: payee}, {$inc : {balance: -1 * payment}});
-                    return res.json({ error: error });
+                    return res.status(400).json({ error: 'Can\'t find this user.'});
                 }
                 if (!doc) {
                     User.findOneAndUpdate({_id: payee}, {$inc : {balance: -1 * payment}});
-                    return res.json({ error: 'Wrong user.' });
+                    return res.status(400).json({ error: 'Wrong user.' });
                 }
                 let transaction = new Transaction({payer: req.user._id, correspondent: payee, 
+                                                    payerName: req.user.name, correspondentName: payeeDoc.name,
                                                     amount: payment,payerBalance: doc.balance - payment, 
                                                     payeeBalance: payeeDoc.balance + payment});
                 transaction.save();
@@ -148,8 +156,11 @@ exports.getTransactions = function (req, res, next) {
         return res.json(transactions.map(function(transaction) {
             let balance;
             let strippedTransaction = {};
+            strippedTransaction.id = transaction._id;
             strippedTransaction.payer = transaction.payer;
             strippedTransaction.correspondent = transaction.correspondent;
+            strippedTransaction.payerName = transaction.payerName;
+            strippedTransaction.correspondentName = transaction.correspondentName;
             strippedTransaction.amount = transaction.amount;
             strippedTransaction.date = transaction.date;
 
@@ -162,10 +173,6 @@ exports.getTransactions = function (req, res, next) {
             return strippedTransaction; 
         }));
     });
-}
-
-exports.test = function (req, res, next) {
-    res.json({message: 'It\'s almost harvesting season.'});
 }
 
 function validateEmail(email) {

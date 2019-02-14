@@ -29,6 +29,4 @@ router.route('/users')
     .get(mainController.requireAuthentication, mainController.getUsers);
 router.route('/pay')
     .post(mainController.requireAuthentication, mainController.pay);
-router.route('/test')
-    .get(mainController.requireAuthentication, mainController.test);
 module.exports = router;

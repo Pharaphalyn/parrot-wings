@@ -3,13 +3,17 @@ const session = require('express-session');
 const passport = require('passport');
 const localStrategy = require('./app/auth/strategy');
 const config = require('./config');
+const cors = require('cors');
 
 let app = express();
+
+//app.use(cors());
 
 app.use(session({
    secret: 'i dont know you and i dont care to know you',
    saveUninitialized: true,
    resave: true,
+   domain: '.app.local',
  }));
 
 app.use(passport.initialize());
