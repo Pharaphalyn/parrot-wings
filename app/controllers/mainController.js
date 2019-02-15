@@ -130,7 +130,7 @@ exports.pay = function (req, res, next) {
         User.findOneAndUpdate({_id: payee}, {$inc : {balance: payment}}, function(error, payeeDoc){
             if (error) return res.status(400).json({ error: error });
             if (!payeeDoc) return res.status(400).json({error: "Wrong payee id."});
-            User.findOneAndUpdate({_id: req.user._id}, {$inc : {balance: -1 * payment}}, function(error, doc){
+            User.findOneAndUpdate({_id: req.user._id}, {$inc : {balance: -1 * payment}}, async function(error, doc){
                 if (error) {
                     User.findOneAndUpdate({_id: payee}, {$inc : {balance: -1 * payment}});
                     return res.status(400).json({ error: 'Can\'t find this user.'});
@@ -141,9 +141,9 @@ exports.pay = function (req, res, next) {
                 }
                 let transaction = new Transaction({payer: req.user._id, correspondent: payee, 
                                                     payerName: req.user.name, correspondentName: payeeDoc.name,
-                                                    amount: payment,payerBalance: doc.balance - payment, 
-                                                    payeeBalance: payeeDoc.balance + payment});
-                transaction.save();
+                                                    amount: payment,payerBalance: +doc.balance - payment, 
+                                                    payeeBalance: +payeeDoc.balance + +payment});
+                await transaction.save();
                 return res.sendStatus(200);
             });
         });
